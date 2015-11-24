@@ -23,7 +23,18 @@ class Server extends EventEmitter implements ServerInterface
             $host = '[' . $host . ']';
         }
 
-        $this->master = @stream_socket_server("tcp://$host:$port", $errno, $errstr);
+        $context = stream_context_create(array(
+            'socket' => array(
+                'backlog' => 65535,
+            )
+        ));
+
+        $this->master = @stream_socket_server("tcp://$host:$port",
+            $errno,
+            $errstr,
+            STREAM_SERVER_LISTEN | STREAM_SERVER_BIND,
+            $context
+        );
         if (false === $this->master) {
             $message = "Could not bind to tcp://$host:$port: $errstr";
             throw new ConnectionException($message, $errno);
